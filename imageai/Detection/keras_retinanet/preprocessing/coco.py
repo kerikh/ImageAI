@@ -27,7 +27,10 @@ class CocoGenerator(Generator):
     def __init__(self, data_dir, set_name, **kwargs):
         self.data_dir  = data_dir
         self.set_name  = set_name
-        self.coco      = COCO(os.path.join(data_dir, 'annotations', 'instances_' + set_name + '.json'))
+        self.coco = COCO(
+            os.path.join(data_dir, 'annotations', f'instances_{set_name}.json')
+        )
+
         self.image_ids = self.coco.getImgIds()
 
         self.load_classes()
@@ -48,9 +51,7 @@ class CocoGenerator(Generator):
             self.classes[c['name']] = len(self.classes)
 
         # also load the reverse (label -> name)
-        self.labels = {}
-        for key, value in self.classes.items():
-            self.labels[value] = key
+        self.labels = {value: key for key, value in self.classes.items()}
 
     def size(self):
         return len(self.image_ids)
@@ -93,7 +94,7 @@ class CocoGenerator(Generator):
 
         # parse annotations
         coco_annotations = self.coco.loadAnns(annotations_ids)
-        for idx, a in enumerate(coco_annotations):
+        for a in coco_annotations:
             # some annotations have basically no width / height, skip them
             if a['bbox'][2] < 1 or a['bbox'][3] < 1:
                 continue

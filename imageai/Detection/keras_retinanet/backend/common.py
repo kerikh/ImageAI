@@ -46,9 +46,9 @@ def bbox_transform_inv(boxes, deltas, mean=None, std=None):
     pred_boxes_x2 = pred_ctr_x + 0.5 * pred_w
     pred_boxes_y2 = pred_ctr_y + 0.5 * pred_h
 
-    pred_boxes = keras.backend.stack([pred_boxes_x1, pred_boxes_y1, pred_boxes_x2, pred_boxes_y2], axis=2)
-
-    return pred_boxes
+    return keras.backend.stack(
+        [pred_boxes_x1, pred_boxes_y1, pred_boxes_x2, pred_boxes_y2], axis=2
+    )
 
 
 def shift(shape, stride, anchors):

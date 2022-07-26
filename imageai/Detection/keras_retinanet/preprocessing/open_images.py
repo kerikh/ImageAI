@@ -59,7 +59,7 @@ def generate_images_annotations_json(main_dir, metadata_dir, subset, cls_index):
         for _ in reader:
             cnt += 1
 
-    id_annotations = dict()
+    id_annotations = {}
     with open(annotations_path, 'r') as csv_file:
         reader = csv.DictReader(csv_file,
                                 fieldnames=['ImageID', 'Source', 'LabelName',
@@ -77,7 +77,7 @@ def generate_images_annotations_json(main_dir, metadata_dir, subset, cls_index):
 
             cls_id = cls_index[class_name]
 
-            img_path = os.path.join(main_dir, 'images', subset, frame + '.jpg')
+            img_path = os.path.join(main_dir, 'images', subset, f'{frame}.jpg')
             if frame in images_sizes:
                 width, height = images_sizes[frame]
             else:
@@ -100,16 +100,22 @@ def generate_images_annotations_json(main_dir, metadata_dir, subset, cls_index):
 
             # Check that the bounding box is valid.
             if x2 <= x1:
-                raise ValueError('line {}: x2 ({}) must be higher than x1 ({})'.format(line, x2, x1))
+                raise ValueError(f'line {line}: x2 ({x2}) must be higher than x1 ({x1})')
             if y2 <= y1:
-                raise ValueError('line {}: y2 ({}) must be higher than y1 ({})'.format(line, y2, y1))
+                raise ValueError(f'line {line}: y2 ({y2}) must be higher than y1 ({y1})')
 
             if y2_int == y1_int:
-                warnings.warn('filtering line {}: rounding y2 ({}) and y1 ({}) makes them equal'.format(line, y2, y1))
+                warnings.warn(
+                    f'filtering line {line}: rounding y2 ({y2}) and y1 ({y1}) makes them equal'
+                )
+
                 continue
 
             if x2_int == x1_int:
-                warnings.warn('filtering line {}: rounding x2 ({}) and x1 ({}) makes them equal'.format(line, x2, x1))
+                warnings.warn(
+                    f'filtering line {line}: rounding x2 ({x2}) and x1 ({x1}) makes them equal'
+                )
+
                 continue
 
             img_id = row['ImageID']
@@ -132,7 +138,7 @@ class OpenImagesGenerator(Generator):
     ):
         self.base_dir = os.path.join(main_dir, 'images', subset)
         metadata_dir = os.path.join(main_dir, version)
-        annotation_cache_json = os.path.join(annotation_cache_dir, subset + '.json')
+        annotation_cache_json = os.path.join(annotation_cache_dir, f'{subset}.json')
 
         self.id_to_labels, cls_index = get_labels(metadata_dir)
 
@@ -146,10 +152,7 @@ class OpenImagesGenerator(Generator):
         if labels_filter is not None:
             self.id_to_labels, self.annotations = self.__filter_data(labels_filter, fixed_labels)
 
-        self.id_to_image_id = dict()
-        for i, k in enumerate(self.annotations):
-            self.id_to_image_id[i] = k
-
+        self.id_to_image_id = dict(enumerate(self.annotations))
         super(OpenImagesGenerator, self).__init__(**kwargs)
 
     def __filter_data(self, labels_filter, fixed_labels):
@@ -185,7 +188,7 @@ class OpenImagesGenerator(Generator):
                     ann['cls_id'] = sub_labels_to_id[label]
                     filtered_boxes.append(ann)
 
-            if len(filtered_boxes) > 0:
+            if filtered_boxes:
                 filtered_annotations[k] = {'w': img_ann['w'], 'h': img_ann['h'], 'boxes': filtered_boxes}
 
         id_to_labels = dict([(labels_to_id[k], k) for k in labels_to_id])
@@ -209,8 +212,7 @@ class OpenImagesGenerator(Generator):
         return float(width) / float(height)
 
     def image_path(self, image_index):
-        path = os.path.join(self.base_dir, self.id_to_image_id[image_index] + '.jpg')
-        return path
+        return os.path.join(self.base_dir, f'{self.id_to_image_id[image_index]}.jpg')
 
     def load_image(self, image_index):
         return read_image_bgr(self.image_path(image_index))

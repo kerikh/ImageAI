@@ -49,7 +49,7 @@ def SqueezeNet(include_top = True, weights="imagenet", model_input=None, non_top
     network = squeezenet_fire_module(input=network, input_channel_small=64, input_channel_large=256)
     network = squeezenet_fire_module(input=network, input_channel_small=64, input_channel_large=256)
 
-    if(include_top):
+    if include_top:
         network = Dropout(0.5)(network)
 
         network = Conv2D(num_classes, kernel_size=(1,1), padding="valid", name="last_conv")(network)
@@ -58,24 +58,16 @@ def SqueezeNet(include_top = True, weights="imagenet", model_input=None, non_top
         network = GlobalAvgPool2D()(network)
         network = Activation("softmax")(network)
 
-    else:
-        if(non_top_pooling == "Average"):
-            network = GlobalAvgPool2D()(network)
-        elif(non_top_pooling == "Maximum"):
-            network = GlobalMaxPool2D()(network)
-        elif(non_top_pooling == None):
-            pass
-
+    elif (non_top_pooling == "Average"):
+        network = GlobalAvgPool2D()(network)
+    elif(non_top_pooling == "Maximum"):
+        network = GlobalMaxPool2D()(network)
     input_image = image_input
     model = Model(inputs=input_image, outputs=network)
 
-    if(weights =="imagenet"):
+    if weights in ["imagenet", "trained"]:
         weights_path = model_path
         model.load_weights(weights_path)
-    elif(weights =="trained"):
-        weights_path = model_path
-        model.load_weights(weights_path)
-
     return model
 
 

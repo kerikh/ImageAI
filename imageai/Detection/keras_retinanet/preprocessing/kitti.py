@@ -65,11 +65,8 @@ class KittiGenerator(Generator):
         1    rotation_y   Rotation ry around Y-axis in camera coordinates [-pi..pi]
         """
 
-        self.id_to_labels = {}
-        for label, id in kitti_classes.items():
-            self.id_to_labels[id] = label
-
-        self.image_data = dict()
+        self.id_to_labels = {id: label for label, id in kitti_classes.items()}
+        self.image_data = {}
         self.images = []
         for i, fn in enumerate(os.listdir(label_dir)):
             label_fp = os.path.join(label_dir, fn)
@@ -82,7 +79,7 @@ class KittiGenerator(Generator):
             with open(label_fp, 'r') as csv_file:
                 reader = csv.DictReader(csv_file, delimiter=' ', fieldnames=fieldnames)
                 boxes = []
-                for line, row in enumerate(reader):
+                for row in reader:
                     label = row['type']
                     cls_id = kitti_classes[label]
 

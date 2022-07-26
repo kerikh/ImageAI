@@ -182,9 +182,9 @@ class ObjectDetection:
             :return detected_detected_objects_image_array:
         """
 
-        if(self.__modelLoaded == False):
+        if (self.__modelLoaded == False):
             raise ValueError("You must call the loadModel() function before making object detection.")
-        elif(self.__modelLoaded == True):
+        elif self.__modelLoaded == True:
             try:
                 output_objects_array = []
                 detected_objects_image_array = []
@@ -222,10 +222,11 @@ class ObjectDetection:
 
                     counting += 1
 
-                    objects_dir = output_image_path + "-objects"
-                    if(extract_detected_objects == True and output_type=="file"):
-                        if (os.path.exists(objects_dir) == False):
-                            os.mkdir(objects_dir)
+                    objects_dir = f"{output_image_path}-objects"
+                    if (
+                        extract_detected_objects == True and output_type == "file"
+                    ) and (os.path.exists(objects_dir) == False):
+                        os.mkdir(objects_dir)
 
                     color = label_color(label)
 
@@ -235,17 +236,25 @@ class ObjectDetection:
                     caption = "{} {:.3f}".format(self.numbers_to_names[label], (score * 100))
                     draw_caption(detected_copy, detection_details, caption)
 
-                    each_object_details = {}
-                    each_object_details["name"] = self.numbers_to_names[label]
-                    each_object_details["percentage_probability"] = str(score * 100)
+                    each_object_details = {
+                        "name": self.numbers_to_names[label],
+                        "percentage_probability": str(score * 100),
+                    }
+
                     output_objects_array.append(each_object_details)
 
-                    if(extract_detected_objects == True):
+                    if (extract_detected_objects == True):
                         splitted_copy = detected_copy2.copy()[detection_details[1]:detection_details[3],
                                         detection_details[0]:detection_details[2]]
-                        if(output_type=="file"):
-                            splitted_image_path = os.path.join(objects_dir, self.numbers_to_names[label] + "-" + str(
-                                counting) + ".jpg")
+                        if (output_type=="file"):
+                            splitted_image_path = os.path.join(
+                                objects_dir,
+                                (
+                                    f"{self.numbers_to_names[label]}-{counting}"
+                                    + ".jpg"
+                                ),
+                            )
+
                             pltimage.imsave(splitted_image_path, splitted_copy)
                             detected_objects_image_array.append(splitted_image_path)
                         elif(output_type=="array"):
@@ -257,17 +266,16 @@ class ObjectDetection:
 
 
 
-                if(extract_detected_objects == True):
-                    if(output_type=="file"):
-                        return output_objects_array, detected_objects_image_array
-                    elif(output_type=="array"):
+                if (extract_detected_objects == True):
+                    if output_type == "array":
                         return detected_copy, output_objects_array, detected_objects_image_array
 
-                else:
-                    if (output_type == "file"):
-                        return output_objects_array
-                    elif (output_type == "array"):
-                        return detected_copy, output_objects_array
+                    elif output_type == "file":
+                        return output_objects_array, detected_objects_image_array
+                elif output_type == "array":
+                    return detected_copy, output_objects_array
+                elif output_type == "file":
+                    return output_objects_array
             except:
                 raise ValueError("Ensure you specified correct input image, input type, output type and/or output image path ")
 
@@ -389,7 +397,7 @@ class ObjectDetection:
 
         if (self.__modelLoaded == False):
             raise ValueError("You must call the loadModel() function before making object detection.")
-        elif (self.__modelLoaded == True):
+        elif self.__modelLoaded == True:
             try:
                 output_objects_array = []
                 detected_objects_image_array = []
@@ -432,10 +440,11 @@ class ObjectDetection:
 
                     counting += 1
 
-                    objects_dir = output_image_path + "-objects"
-                    if (extract_detected_objects == True and output_type == "file"):
-                        if (os.path.exists(objects_dir) == False):
-                            os.mkdir(objects_dir)
+                    objects_dir = f"{output_image_path}-objects"
+                    if (
+                        extract_detected_objects == True and output_type == "file"
+                    ) and (os.path.exists(objects_dir) == False):
+                        os.mkdir(objects_dir)
 
                     color = label_color(label)
 
@@ -445,17 +454,25 @@ class ObjectDetection:
                     caption = "{} {:.3f}".format(self.numbers_to_names[label], (score * 100))
                     draw_caption(detected_copy, detection_details, caption)
 
-                    each_object_details = {}
-                    each_object_details["name"] = self.numbers_to_names[label]
-                    each_object_details["percentage_probability"] = str(score * 100)
+                    each_object_details = {
+                        "name": self.numbers_to_names[label],
+                        "percentage_probability": str(score * 100),
+                    }
+
                     output_objects_array.append(each_object_details)
 
                     if (extract_detected_objects == True):
                         splitted_copy = detected_copy2.copy()[detection_details[1]:detection_details[3],
                                         detection_details[0]:detection_details[2]]
                         if (output_type == "file"):
-                            splitted_image_path = os.path.join(objects_dir, self.numbers_to_names[label] + "-" + str(
-                                counting) + ".jpg")
+                            splitted_image_path = os.path.join(
+                                objects_dir,
+                                (
+                                    f"{self.numbers_to_names[label]}-{counting}"
+                                    + ".jpg"
+                                ),
+                            )
+
                             pltimage.imsave(splitted_image_path, splitted_copy)
                             detected_objects_image_array.append(splitted_image_path)
                         elif (output_type == "array"):
@@ -465,16 +482,15 @@ class ObjectDetection:
                     pltimage.imsave(output_image_path, detected_copy)
 
                 if (extract_detected_objects == True):
-                    if (output_type == "file"):
-                        return output_objects_array, detected_objects_image_array
-                    elif (output_type == "array"):
+                    if output_type == "array":
                         return detected_copy, output_objects_array, detected_objects_image_array
 
-                else:
-                    if (output_type == "file"):
-                        return output_objects_array
-                    elif (output_type == "array"):
-                        return detected_copy, output_objects_array
+                    elif output_type == "file":
+                        return output_objects_array, detected_objects_image_array
+                elif output_type == "array":
+                    return detected_copy, output_objects_array
+                elif output_type == "file":
+                    return output_objects_array
             except:
                 raise ValueError(
                     "Ensure you specified correct input image, input type, output type and/or output image path ")

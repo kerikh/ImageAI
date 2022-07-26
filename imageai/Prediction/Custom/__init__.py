@@ -220,9 +220,9 @@ class ModelTraining:
                                                           class_mode="categorical")
 
         class_indices = train_generator.class_indices
-        class_json = {}
-        for eachClass in class_indices:
-            class_json[str(class_indices[eachClass])] = eachClass
+        class_json = {
+            str(class_indices[eachClass]): eachClass for eachClass in class_indices
+        }
 
         with open(os.path.join(self.__model_class_dir, "model_class.json"), "w+") as json_file:
             json.dump(class_json, json_file, indent=4, separators=(",", " : "),
@@ -427,13 +427,248 @@ class CustomImagePrediction:
         :param result_count:
         :return prediction_results, prediction_probabilities:
         """
-        prediction_results = []
-        prediction_probabilities = []
         if (self.__modelLoaded == False):
             raise ValueError("You must call the loadModel() function before making predictions.")
 
-        else:
+        prediction_results = []
+        prediction_probabilities = []
+        if (self.__modelType == "squeezenet"):
 
+            from .custom_utils import preprocess_input
+            from .custom_utils import decode_predictions
+            if (input_type == "file"):
+                try:
+                    image_to_predict = image.load_img(image_input, target_size=(
+                    self.__input_image_size, self.__input_image_size))
+                    image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
+                    image_to_predict = np.expand_dims(image_to_predict, axis=0)
+
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have set a path to an invalid image file.")
+            elif (input_type == "array"):
+                try:
+                    image_input = Image.fromarray(np.uint8(image_input))
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong numpy array for the image")
+            elif (input_type == "stream"):
+                try:
+                    image_input = Image.open(image_input)
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong stream for the image")
+
+            model = self.__model_collection[0]
+
+            prediction = model.predict(image_to_predict, steps=1)
+
+            try:
+                predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+
+                for result in predictiondata:
+                    prediction_results.append(str(result[0]))
+                    prediction_probabilities.append(str(result[1] * 100))
+            except:
+                raise ValueError("An error occured! Try again.")
+
+            return prediction_results, prediction_probabilities
+        elif (self.__modelType == "resnet"):
+
+            model = self.__model_collection[0]
+
+            from .custom_utils import preprocess_input
+            from .custom_utils import decode_predictions
+            if (input_type == "file"):
+                try:
+                    image_to_predict = image.load_img(image_input, target_size=(
+                    self.__input_image_size, self.__input_image_size))
+                    image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
+                    image_to_predict = np.expand_dims(image_to_predict, axis=0)
+
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have set a path to an invalid image file.")
+            elif (input_type == "array"):
+                try:
+                    image_input = Image.fromarray(np.uint8(image_input))
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong numpy array for the image")
+            elif (input_type == "stream"):
+                try:
+                    image_input = Image.open(image_input)
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong stream for the image")
+
+            prediction = model.predict(x=image_to_predict, steps=1)
+
+
+
+
+            try:
+
+                predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+
+                for result in predictiondata:
+                    prediction_results.append(str(result[0]))
+                    prediction_probabilities.append(str(result[1] * 100))
+
+
+            except:
+                raise ValueError("An error occured! Try again.")
+
+            return prediction_results, prediction_probabilities
+        elif (self.__modelType == "densenet"):
+
+            model = self.__model_collection[0]
+
+            from .custom_utils import preprocess_input
+            from .custom_utils import decode_predictions
+            from ..DenseNet.densenet import DenseNetImageNet121
+            if (input_type == "file"):
+                try:
+                    image_to_predict = image.load_img(image_input, target_size=(
+                    self.__input_image_size, self.__input_image_size))
+                    image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
+                    image_to_predict = np.expand_dims(image_to_predict, axis=0)
+
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have set a path to an invalid image file.")
+            elif (input_type == "array"):
+                try:
+                    image_input = Image.fromarray(np.uint8(image_input))
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong numpy array for the image")
+            elif (input_type == "stream"):
+                try:
+                    image_input = Image.open(image_input)
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong stream for the image")
+
+            prediction = model.predict(x=image_to_predict, steps=1)
+
+            try:
+                predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+
+                for result in predictiondata:
+                    prediction_results.append(str(result[0]))
+                    prediction_probabilities.append(str(result[1] * 100))
+            except:
+                raise ValueError("An error occured! Try again.")
+
+            return prediction_results, prediction_probabilities
+        elif (self.__modelType == "inceptionv3"):
+
+            model = self.__model_collection[0]
+
+            from imageai.Prediction.InceptionV3.inceptionv3 import InceptionV3
+            from .custom_utils import decode_predictions, preprocess_input
+
+            if (input_type == "file"):
+                try:
+                    image_to_predict = image.load_img(image_input, target_size=(
+                    self.__input_image_size, self.__input_image_size))
+                    image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
+                    image_to_predict = np.expand_dims(image_to_predict, axis=0)
+
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have set a path to an invalid image file.")
+            elif (input_type == "array"):
+                try:
+                    image_input = Image.fromarray(np.uint8(image_input))
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong numpy array for the image")
+            elif (input_type == "stream"):
+                try:
+                    image_input = Image.open(image_input)
+                    image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
+                    image_input = np.expand_dims(image_input, axis=0)
+                    image_to_predict = image_input.copy()
+                    image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
+                    image_to_predict = preprocess_input(image_to_predict)
+                except:
+                    raise ValueError("You have parsed in a wrong stream for the image")
+
+            prediction = model.predict(x=image_to_predict, steps=1)
+
+            try:
+                predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+
+                for result in predictiondata:
+                    prediction_results.append(str(result[0]))
+                    prediction_probabilities.append(str(result[1] * 100))
+            except:
+                raise ValueError("An error occured! Try again.")
+
+            return prediction_results, prediction_probabilities
+
+
+
+
+    def predictMultipleImages(self, sent_images_array, result_count_per_image=1, input_type="file"):
+        """
+                'predictMultipleImages()' function is used to predict more than one image by receiving the following arguments:
+                    * input_type , the type of inputs contained in the parsed array. Acceptable values are "file", "array" and "stream"
+                    * sent_images_array , an array of image file paths, image numpy array or image file stream
+                    * result_count_per_image (optionally) , the number of predictions to be sent per image, which must be whole numbers between
+                        1 and the number of classes present in the model
+
+                This function returns an array of dictionaries, with each dictionary containing 2 arrays namely 'prediction_results' and 'prediction_probabilities'. The 'prediction_results'
+                contains possible objects classes arranged in descending of their percentage probabilities. The 'prediction_probabilities'
+                contains the percentage probability of each object class. The position of each object class in the 'prediction_results'
+                array corresponds with the positions of the percentage possibilities in the 'prediction_probabilities' array.
+
+
+                :param input_type:
+                :param sent_images_array:
+                :param result_count_per_image:
+                :return output_array:
+                """
+
+        output_array = []
+
+        for image_input in sent_images_array:
+
+            if (self.__modelLoaded == False):
+                raise ValueError("You must call the loadModel() function before making predictions.")
+
+            prediction_results = []
+            prediction_probabilities = []
             if (self.__modelType == "squeezenet"):
 
                 from .custom_utils import preprocess_input
@@ -441,7 +676,7 @@ class CustomImagePrediction:
                 if (input_type == "file"):
                     try:
                         image_to_predict = image.load_img(image_input, target_size=(
-                        self.__input_image_size, self.__input_image_size))
+                            self.__input_image_size, self.__input_image_size))
                         image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
                         image_to_predict = np.expand_dims(image_to_predict, axis=0)
 
@@ -474,7 +709,7 @@ class CustomImagePrediction:
                 prediction = model.predict(image_to_predict, steps=1)
 
                 try:
-                    predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+                    predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
 
                     for result in predictiondata:
                         prediction_results.append(str(result[0]))
@@ -482,8 +717,14 @@ class CustomImagePrediction:
                 except:
                     raise ValueError("An error occured! Try again.")
 
-                return prediction_results, prediction_probabilities
-            elif (self.__modelType == "resnet"):
+                each_image_details = {
+                    "predictions": prediction_results,
+                    "percentage_probabilities": prediction_probabilities,
+                }
+
+                output_array.append(each_image_details)
+
+            elif self.__modelType == "resnet":
 
                 model = self.__model_collection[0]
 
@@ -492,7 +733,7 @@ class CustomImagePrediction:
                 if (input_type == "file"):
                     try:
                         image_to_predict = image.load_img(image_input, target_size=(
-                        self.__input_image_size, self.__input_image_size))
+                            self.__input_image_size, self.__input_image_size))
                         image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
                         image_to_predict = np.expand_dims(image_to_predict, axis=0)
 
@@ -522,12 +763,9 @@ class CustomImagePrediction:
 
                 prediction = model.predict(x=image_to_predict, steps=1)
 
-
-
-
                 try:
 
-                    predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+                    predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
 
                     for result in predictiondata:
                         prediction_results.append(str(result[0]))
@@ -537,8 +775,15 @@ class CustomImagePrediction:
                 except:
                     raise ValueError("An error occured! Try again.")
 
-                return prediction_results, prediction_probabilities
-            elif (self.__modelType == "densenet"):
+                each_image_details = {
+                    "predictions": prediction_results,
+                    "percentage_probabilities": prediction_probabilities,
+                }
+
+                output_array.append(each_image_details)
+
+
+            elif self.__modelType == "densenet":
 
                 model = self.__model_collection[0]
 
@@ -548,7 +793,7 @@ class CustomImagePrediction:
                 if (input_type == "file"):
                     try:
                         image_to_predict = image.load_img(image_input, target_size=(
-                        self.__input_image_size, self.__input_image_size))
+                            self.__input_image_size, self.__input_image_size))
                         image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
                         image_to_predict = np.expand_dims(image_to_predict, axis=0)
 
@@ -579,7 +824,7 @@ class CustomImagePrediction:
                 prediction = model.predict(x=image_to_predict, steps=1)
 
                 try:
-                    predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+                    predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
 
                     for result in predictiondata:
                         prediction_results.append(str(result[0]))
@@ -587,8 +832,15 @@ class CustomImagePrediction:
                 except:
                     raise ValueError("An error occured! Try again.")
 
-                return prediction_results, prediction_probabilities
-            elif (self.__modelType == "inceptionv3"):
+                each_image_details = {
+                    "predictions": prediction_results,
+                    "percentage_probabilities": prediction_probabilities,
+                }
+
+                output_array.append(each_image_details)
+
+
+            elif self.__modelType == "inceptionv3":
 
                 model = self.__model_collection[0]
 
@@ -598,7 +850,7 @@ class CustomImagePrediction:
                 if (input_type == "file"):
                     try:
                         image_to_predict = image.load_img(image_input, target_size=(
-                        self.__input_image_size, self.__input_image_size))
+                            self.__input_image_size, self.__input_image_size))
                         image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
                         image_to_predict = np.expand_dims(image_to_predict, axis=0)
 
@@ -629,7 +881,7 @@ class CustomImagePrediction:
                 prediction = model.predict(x=image_to_predict, steps=1)
 
                 try:
-                    predictiondata = decode_predictions(prediction, top=int(result_count), model_json=self.jsonPath)
+                    predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
 
                     for result in predictiondata:
                         prediction_results.append(str(result[0]))
@@ -637,259 +889,12 @@ class CustomImagePrediction:
                 except:
                     raise ValueError("An error occured! Try again.")
 
-                return prediction_results, prediction_probabilities
+                each_image_details = {
+                    "predictions": prediction_results,
+                    "percentage_probabilities": prediction_probabilities,
+                }
 
-
-
-
-    def predictMultipleImages(self, sent_images_array, result_count_per_image=1, input_type="file"):
-        """
-                'predictMultipleImages()' function is used to predict more than one image by receiving the following arguments:
-                    * input_type , the type of inputs contained in the parsed array. Acceptable values are "file", "array" and "stream"
-                    * sent_images_array , an array of image file paths, image numpy array or image file stream
-                    * result_count_per_image (optionally) , the number of predictions to be sent per image, which must be whole numbers between
-                        1 and the number of classes present in the model
-
-                This function returns an array of dictionaries, with each dictionary containing 2 arrays namely 'prediction_results' and 'prediction_probabilities'. The 'prediction_results'
-                contains possible objects classes arranged in descending of their percentage probabilities. The 'prediction_probabilities'
-                contains the percentage probability of each object class. The position of each object class in the 'prediction_results'
-                array corresponds with the positions of the percentage possibilities in the 'prediction_probabilities' array.
-
-
-                :param input_type:
-                :param sent_images_array:
-                :param result_count_per_image:
-                :return output_array:
-                """
-
-        output_array = []
-
-        for image_input in sent_images_array:
-
-            prediction_results = []
-            prediction_probabilities = []
-            if (self.__modelLoaded == False):
-                raise ValueError("You must call the loadModel() function before making predictions.")
-
-            else:
-                if (self.__modelType == "squeezenet"):
-
-                    from .custom_utils import preprocess_input
-                    from .custom_utils import decode_predictions
-                    if (input_type == "file"):
-                        try:
-                            image_to_predict = image.load_img(image_input, target_size=(
-                                self.__input_image_size, self.__input_image_size))
-                            image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
-                            image_to_predict = np.expand_dims(image_to_predict, axis=0)
-
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have set a path to an invalid image file.")
-                    elif (input_type == "array"):
-                        try:
-                            image_input = Image.fromarray(np.uint8(image_input))
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong numpy array for the image")
-                    elif (input_type == "stream"):
-                        try:
-                            image_input = Image.open(image_input)
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong stream for the image")
-
-                    model = self.__model_collection[0]
-
-                    prediction = model.predict(image_to_predict, steps=1)
-
-                    try:
-                        predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
-
-                        for result in predictiondata:
-                            prediction_results.append(str(result[0]))
-                            prediction_probabilities.append(str(result[1] * 100))
-                    except:
-                        raise ValueError("An error occured! Try again.")
-
-                    each_image_details = {}
-                    each_image_details["predictions"] = prediction_results
-                    each_image_details["percentage_probabilities"] = prediction_probabilities
-                    output_array.append(each_image_details)
-
-                elif (self.__modelType == "resnet"):
-
-                    model = self.__model_collection[0]
-
-                    from .custom_utils import preprocess_input
-                    from .custom_utils import decode_predictions
-                    if (input_type == "file"):
-                        try:
-                            image_to_predict = image.load_img(image_input, target_size=(
-                                self.__input_image_size, self.__input_image_size))
-                            image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
-                            image_to_predict = np.expand_dims(image_to_predict, axis=0)
-
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have set a path to an invalid image file.")
-                    elif (input_type == "array"):
-                        try:
-                            image_input = Image.fromarray(np.uint8(image_input))
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong numpy array for the image")
-                    elif (input_type == "stream"):
-                        try:
-                            image_input = Image.open(image_input)
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong stream for the image")
-
-                    prediction = model.predict(x=image_to_predict, steps=1)
-
-                    try:
-
-                        predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
-
-                        for result in predictiondata:
-                            prediction_results.append(str(result[0]))
-                            prediction_probabilities.append(str(result[1] * 100))
-
-
-                    except:
-                        raise ValueError("An error occured! Try again.")
-
-                    each_image_details = {}
-                    each_image_details["predictions"] = prediction_results
-                    each_image_details["percentage_probabilities"] = prediction_probabilities
-                    output_array.append(each_image_details)
-
-
-                elif (self.__modelType == "densenet"):
-
-                    model = self.__model_collection[0]
-
-                    from .custom_utils import preprocess_input
-                    from .custom_utils import decode_predictions
-                    from ..DenseNet.densenet import DenseNetImageNet121
-                    if (input_type == "file"):
-                        try:
-                            image_to_predict = image.load_img(image_input, target_size=(
-                                self.__input_image_size, self.__input_image_size))
-                            image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
-                            image_to_predict = np.expand_dims(image_to_predict, axis=0)
-
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have set a path to an invalid image file.")
-                    elif (input_type == "array"):
-                        try:
-                            image_input = Image.fromarray(np.uint8(image_input))
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong numpy array for the image")
-                    elif (input_type == "stream"):
-                        try:
-                            image_input = Image.open(image_input)
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong stream for the image")
-
-                    prediction = model.predict(x=image_to_predict, steps=1)
-
-                    try:
-                        predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
-
-                        for result in predictiondata:
-                            prediction_results.append(str(result[0]))
-                            prediction_probabilities.append(str(result[1] * 100))
-                    except:
-                        raise ValueError("An error occured! Try again.")
-
-                    each_image_details = {}
-                    each_image_details["predictions"] = prediction_results
-                    each_image_details["percentage_probabilities"] = prediction_probabilities
-                    output_array.append(each_image_details)
-
-
-                elif (self.__modelType == "inceptionv3"):
-
-                    model = self.__model_collection[0]
-
-                    from imageai.Prediction.InceptionV3.inceptionv3 import InceptionV3
-                    from .custom_utils import decode_predictions, preprocess_input
-
-                    if (input_type == "file"):
-                        try:
-                            image_to_predict = image.load_img(image_input, target_size=(
-                                self.__input_image_size, self.__input_image_size))
-                            image_to_predict = image.img_to_array(image_to_predict, data_format="channels_last")
-                            image_to_predict = np.expand_dims(image_to_predict, axis=0)
-
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have set a path to an invalid image file.")
-                    elif (input_type == "array"):
-                        try:
-                            image_input = Image.fromarray(np.uint8(image_input))
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong numpy array for the image")
-                    elif (input_type == "stream"):
-                        try:
-                            image_input = Image.open(image_input)
-                            image_input = image_input.resize((self.__input_image_size, self.__input_image_size))
-                            image_input = np.expand_dims(image_input, axis=0)
-                            image_to_predict = image_input.copy()
-                            image_to_predict = np.asarray(image_to_predict, dtype=np.float64)
-                            image_to_predict = preprocess_input(image_to_predict)
-                        except:
-                            raise ValueError("You have parsed in a wrong stream for the image")
-
-                    prediction = model.predict(x=image_to_predict, steps=1)
-
-                    try:
-                        predictiondata = decode_predictions(prediction, top=int(result_count_per_image), model_json=self.jsonPath)
-
-                        for result in predictiondata:
-                            prediction_results.append(str(result[0]))
-                            prediction_probabilities.append(str(result[1] * 100))
-                    except:
-                        raise ValueError("An error occured! Try again.")
-
-                    each_image_details = {}
-                    each_image_details["predictions"] = prediction_results
-                    each_image_details["percentage_probabilities"] = prediction_probabilities
-                    output_array.append(each_image_details)
+                output_array.append(each_image_details)
 
 
         return output_array

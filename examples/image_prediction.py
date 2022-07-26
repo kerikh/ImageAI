@@ -10,4 +10,4 @@ prediction.loadModel()
 
 predictions, probabilities = prediction.predictImage(os.path.join(execution_path, "1.jpg"), result_count=5 )
 for eachPrediction, eachProbability in zip(predictions, probabilities):
-    print(eachPrediction + " : " + eachProbability)
+    print(f"{eachPrediction} : {eachProbability}")

@@ -104,13 +104,13 @@ def __main__(benchmark, device, name):
 
     model.compile("adam", "categorical_crossentropy", ["accuracy"])
 
-    pathname = os.path.join("data", "checkpoints", benchmark, "{}.hdf5".format(name))
+    pathname = os.path.join("data", "checkpoints", benchmark, f"{name}.hdf5")
 
     pathname = pkg_resources.resource_filename("keras_resnet", pathname)
 
     model_checkpoint = keras.callbacks.ModelCheckpoint(pathname)
 
-    pathname = os.path.join("data", "logs", benchmark, "{}.csv".format(name))
+    pathname = os.path.join("data", "logs", benchmark, f"{name}.csv")
 
     pathname = pkg_resources.resource_filename("keras_resnet", pathname)
 

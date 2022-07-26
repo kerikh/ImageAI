@@ -14,9 +14,8 @@ def label_color(label):
     """
     if label < len(colors):
         return colors[label]
-    else:
-        warnings.warn('Label {} has no color, returning default.'.format(label))
-        return (0, 255, 0)
+    warnings.warn(f'Label {label} has no color, returning default.')
+    return (0, 255, 0)
 
 """
 Generated using:

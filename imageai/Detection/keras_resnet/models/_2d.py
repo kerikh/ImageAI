@@ -55,11 +55,7 @@ def ResNet(inputs, blocks, block, include_top=True, classes=1000, freeze_bn=True
 
         >>> model.compile("adam", "categorical_crossentropy", ["accuracy"])
     """
-    if keras.backend.image_data_format() == "channels_last":
-        axis = 3
-    else:
-        axis = 1
-
+    axis = 3 if keras.backend.image_data_format() == "channels_last" else 1
     if numerical_names is None:
         numerical_names = [True] * len(blocks)
 
@@ -81,16 +77,15 @@ def ResNet(inputs, blocks, block, include_top=True, classes=1000, freeze_bn=True
 
         outputs.append(x)
 
-    if include_top:
-        assert classes > 0
-
-        x = keras.layers.GlobalAveragePooling2D(name="pool5")(x)
-        x = keras.layers.Dense(classes, activation="softmax", name="fc1000")(x)
-
-        return keras.models.Model(inputs=inputs, outputs=x, *args, **kwargs)
-    else:
+    if not include_top:
         # Else output each stages features
         return keras.models.Model(inputs=inputs, outputs=outputs, *args, **kwargs)
+    assert classes > 0
+
+    x = keras.layers.GlobalAveragePooling2D(name="pool5")(x)
+    x = keras.layers.Dense(classes, activation="softmax", name="fc1000")(x)
+
+    return keras.models.Model(inputs=inputs, outputs=x, *args, **kwargs)
 
 
 def ResNet18(inputs, blocks=None, include_top=True, classes=1000, *args, **kwargs):

@@ -82,7 +82,7 @@ def anchors_for_shape(
 
     # skip the first two levels
     image_shape = np.array(image_shape[:2])
-    for i in range(pyramid_levels[0] - 1):
+    for _ in range(pyramid_levels[0] - 1):
         image_shape = (image_shape + 1) // 2
 
     # compute anchors over all pyramid levels
@@ -164,12 +164,18 @@ def bbox_transform(anchors, gt_boxes, mean=None, std=None):
     if isinstance(mean, (list, tuple)):
         mean = np.array(mean)
     elif not isinstance(mean, np.ndarray):
-        raise ValueError('Expected mean to be a np.ndarray, list or tuple. Received: {}'.format(type(mean)))
+        raise ValueError(
+            f'Expected mean to be a np.ndarray, list or tuple. Received: {type(mean)}'
+        )
+
 
     if isinstance(std, (list, tuple)):
         std = np.array(std)
     elif not isinstance(std, np.ndarray):
-        raise ValueError('Expected std to be a np.ndarray, list or tuple. Received: {}'.format(type(std)))
+        raise ValueError(
+            f'Expected std to be a np.ndarray, list or tuple. Received: {type(std)}'
+        )
+
 
     anchor_widths  = anchors[:, 2] - anchors[:, 0]
     anchor_heights = anchors[:, 3] - anchors[:, 1]

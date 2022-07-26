@@ -53,8 +53,7 @@ class SubPixelUpscaling(Layer):
         pass
 
     def call(self, x, mask=None):
-        y = depth_to_space(x, self.scale_factor, self.data_format)
-        return y
+        return depth_to_space(x, self.scale_factor, self.data_format)
 
     def compute_output_shape(self, input_shape):
         if self.data_format == 'channels_first':
