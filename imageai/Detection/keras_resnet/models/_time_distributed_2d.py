@@ -58,11 +58,7 @@ def TimeDistributedResNet(inputs, blocks, block, include_top=True, classes=1000,
 
         >>> model.compile("adam", "categorical_crossentropy", ["accuracy"])
     """
-    if keras.backend.image_data_format() == "channels_last":
-        axis = 3
-    else:
-        axis = 1
-
+    axis = 3 if keras.backend.image_data_format() == "channels_last" else 1
     x = keras.layers.TimeDistributed(keras.layers.ZeroPadding2D(padding=3), name="padding_conv1")(inputs)
     x = keras.layers.TimeDistributed(keras.layers.Conv2D(64, (7, 7), strides=(2, 2), use_bias=False), name="conv1")(x)
     x = keras.layers.TimeDistributed(keras_resnet.layers.BatchNormalization(axis=axis, epsilon=1e-5, freeze=freeze_bn), name="bn_conv1")(x)
@@ -80,16 +76,15 @@ def TimeDistributedResNet(inputs, blocks, block, include_top=True, classes=1000,
         features *= 2
         outputs.append(x)
 
-    if include_top:
-        assert classes > 0
-
-        x = keras.layers.TimeDistributed(keras.layers.GlobalAveragePooling2D(), name="pool5")(x)
-        x = keras.layers.TimeDistributed(keras.layers.Dense(classes, activation="softmax"), name="fc1000")(x)
-
-        return keras.models.Model(inputs=inputs, outputs=x, *args, **kwargs)
-    else:
+    if not include_top:
         # Else output each stages features
         return keras.models.Model(inputs=inputs, outputs=outputs, *args, **kwargs)
+    assert classes > 0
+
+    x = keras.layers.TimeDistributed(keras.layers.GlobalAveragePooling2D(), name="pool5")(x)
+    x = keras.layers.TimeDistributed(keras.layers.Dense(classes, activation="softmax"), name="fc1000")(x)
+
+    return keras.models.Model(inputs=inputs, outputs=x, *args, **kwargs)
 
 
 def TimeDistributedResNet18(inputs, blocks=None, include_top=True, classes=1000, *args, **kwargs):

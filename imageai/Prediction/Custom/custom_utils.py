@@ -33,9 +33,7 @@ def decode_predictions(preds, top=5, model_json=""):
     for pred in preds:
         top_indices = pred.argsort()[-top:][::-1]
         for i in top_indices:
-            each_result = []
-            each_result.append(CLASS_INDEX[str(i)])
-            each_result.append(pred[i])
+            each_result = [CLASS_INDEX[str(i)], pred[i]]
             results.append(each_result)
 
     return results

@@ -259,31 +259,29 @@ def DenseNetFCN(input_shape, nb_dense_block=5, growth_rate=16, nb_layers_per_blo
     min_size = 2 ** nb_dense_block
 
     if K.image_data_format() == 'channels_first':
-        if input_shape is not None:
-            if ((input_shape[1] is not None and input_shape[1] < min_size) or
-                    (input_shape[2] is not None and input_shape[2] < min_size)):
-                raise ValueError('Input size must be at least ' +
-                                 str(min_size) + 'x' + str(min_size) + ', got '
-                                                                       '`input_shape=' + str(input_shape) + '`')
-        else:
+        if input_shape is None:
             input_shape = (classes, None, None)
-    else:
-        if input_shape is not None:
-            if ((input_shape[0] is not None and input_shape[0] < min_size) or
-                    (input_shape[1] is not None and input_shape[1] < min_size)):
-                raise ValueError('Input size must be at least ' +
-                                 str(min_size) + 'x' + str(min_size) + ', got '
-                                                                       '`input_shape=' + str(input_shape) + '`')
-        else:
-            input_shape = (None, None, classes)
+        elif ((input_shape[1] is not None and input_shape[1] < min_size) or
+                    (input_shape[2] is not None and input_shape[2] < min_size)):
+            raise ValueError('Input size must be at least ' +
+                             str(min_size) + 'x' + str(min_size) + ', got '
+                                                                   '`input_shape=' + str(input_shape) + '`')
+    elif input_shape is None:
+        input_shape = (None, None, classes)
 
+    elif ((input_shape[0] is not None and input_shape[0] < min_size) or
+                    (input_shape[1] is not None and input_shape[1] < min_size)):
+        raise ValueError('Input size must be at least ' +
+                         str(min_size) + 'x' + str(min_size) + ', got '
+                                                               '`input_shape=' + str(input_shape) + '`')
     if input_tensor is None:
         img_input = Input(shape=input_shape)
     else:
-        if not K.is_keras_tensor(input_tensor):
-            img_input = Input(tensor=input_tensor, shape=input_shape)
-        else:
-            img_input = input_tensor
+        img_input = (
+            input_tensor
+            if K.is_keras_tensor(input_tensor)
+            else Input(tensor=input_tensor, shape=input_shape)
+        )
 
     x = __create_fcn_dense_net(classes, img_input, include_top, nb_dense_block,
                                growth_rate, reduction, dropout_rate, weight_decay,
@@ -293,10 +291,7 @@ def DenseNetFCN(input_shape, nb_dense_block=5, growth_rate=16, nb_layers_per_blo
     # Ensure that the model takes into account
     # any potential predecessors of `input_tensor`.
     inputs = img_input
-    # Create model.
-    model = Model(inputs, x, name='fcn-densenet')
-
-    return model
+    return Model(inputs, x, name='fcn-densenet')
 
 
 def DenseNetImageNet121(model_input=None,
@@ -433,7 +428,7 @@ def __dense_block(x, nb_layers, nb_filter, growth_rate, bottleneck=False, dropou
 
     x_list = [x]
 
-    for i in range(nb_layers):
+    for _ in range(nb_layers):
         cb = __conv_block(x, growth_rate, bottleneck, dropout_rate, weight_decay)
         x_list.append(cb)
 
@@ -442,10 +437,7 @@ def __dense_block(x, nb_layers, nb_filter, growth_rate, bottleneck=False, dropou
         if grow_nb_filters:
             nb_filter += growth_rate
 
-    if return_concat_list:
-        return x, nb_filter, x_list
-    else:
-        return x, nb_filter
+    return (x, nb_filter, x_list) if return_concat_list else (x, nb_filter)
 
 
 def __transition_block(ip, nb_filter, compression=1.0, weight_decay=1e-4):
@@ -538,19 +530,18 @@ def __create_dense_net(nb_classes, img_input, include_top, depth=40, nb_dense_bl
                                                    'Note that list size must be (nb_dense_block)'
         final_nb_layer = nb_layers[-1]
         nb_layers = nb_layers[:-1]
+    elif nb_layers_per_block == -1:
+        assert (depth - 4) % 3 == 0, 'Depth must be 3 N + 4 if nb_layers_per_block == -1'
+        count = int((depth - 4) / 3)
+
+        if bottleneck:
+            count //= 2
+
+        nb_layers = [count for _ in range(nb_dense_block)]
+        final_nb_layer = count
     else:
-        if nb_layers_per_block == -1:
-            assert (depth - 4) % 3 == 0, 'Depth must be 3 N + 4 if nb_layers_per_block == -1'
-            count = int((depth - 4) / 3)
-
-            if bottleneck:
-                count = count // 2
-
-            nb_layers = [count for _ in range(nb_dense_block)]
-            final_nb_layer = count
-        else:
-            final_nb_layer = nb_layers_per_block
-            nb_layers = [nb_layers_per_block] * nb_dense_block
+        final_nb_layer = nb_layers_per_block
+        nb_layers = [nb_layers_per_block] * nb_dense_block
 
     # compute initial nb_filter if -1, else accept users initial nb_filter
     if nb_filter <= 0:

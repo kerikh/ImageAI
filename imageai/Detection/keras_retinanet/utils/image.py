@@ -112,7 +112,9 @@ class TransformParameters:
         elif data_format == 'channels_last':
             self.channel_axis = 2
         else:
-            raise ValueError("invalid data_format, expected 'channels_first' or 'channels_last', got '{}'".format(data_format))
+            raise ValueError(
+                f"invalid data_format, expected 'channels_first' or 'channels_last', got '{data_format}'"
+            )
 
     def cvBorderMode(self):
         if self.fill_mode == 'constant':

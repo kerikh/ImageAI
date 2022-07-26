@@ -89,27 +89,19 @@ def ResNet50(include_top=True, non_top_pooling=None, model_input=None, num_class
             num_layers = num_layers - 1
         output = resnet_block(output, channel_depth=channel_depth, num_layers=num_layers, strided_pool_first=strided_pool_first)
 
-    if(include_top):
+    if include_top:
         output = GlobalAvgPool2D(name="global_avg_pooling")(output)
         output = Dense(num_classes)(output)
         output = Activation("softmax")(output)
-    else:
-        if (non_top_pooling == "Average"):
-            output = GlobalAvgPool2D()(output)
-        elif (non_top_pooling == "Maximum"):
-            output = GlobalMaxPool2D()(output)
-        elif (non_top_pooling == None):
-            pass
-
+    elif (non_top_pooling == "Average"):
+        output = GlobalAvgPool2D()(output)
+    elif (non_top_pooling == "Maximum"):
+        output = GlobalMaxPool2D()(output)
     model = Model(inputs=input_object, outputs=output)
 
-    if(weights == "imagenet"):
+    if weights in ["imagenet", "trained"]:
         weights_path = model_path
         model.load_weights(weights_path)
-    elif (weights == "trained"):
-        weights_path = model_path
-        model.load_weights(weights_path)
-
     return model
 
 

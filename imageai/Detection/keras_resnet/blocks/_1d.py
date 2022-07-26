@@ -42,16 +42,8 @@ def basic_1d(filters, stage=0, block=0, kernel_size=3, numerical_name=False, str
         >>> keras_resnet.blocks.basic_1d(64)
     """
     if stride is None:
-        if block != 0 or stage == 0:
-            stride = 1
-        else:
-            stride = 2
-
-    if keras.backend.image_data_format() == "channels_last":
-        axis = 3
-    else:
-        axis = 1
-
+        stride = 1 if block != 0 or stage == 0 else 2
+    axis = 3 if keras.backend.image_data_format() == "channels_last" else 1
     if block > 0 and numerical_name:
         block_char = "b{}".format(block)
     else:
@@ -110,11 +102,7 @@ def bottleneck_1d(filters, stage=0, block=0, kernel_size=3, numerical_name=False
     if stride is None:
         stride = 1 if block != 0 or stage == 0 else 2
 
-    if keras.backend.image_data_format() == "channels_last":
-        axis = 3
-    else:
-        axis = 1
-
+    axis = 3 if keras.backend.image_data_format() == "channels_last" else 1
     if block > 0 and numerical_name:
         block_char = "b{}".format(block)
     else:

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 import warnings
 
 import keras
@@ -22,7 +23,8 @@ from imageai.Detection.keras_resnet import models
 from ..models import retinanet
 
 resnet_filename = 'ResNet-{}-model.keras.h5'
-resnet_resource = 'https://github.com/fizyr/keras-models/releases/download/v0.0.1/{}'.format(resnet_filename)
+resnet_resource = f'https://github.com/fizyr/keras-models/releases/download/v0.0.1/{resnet_filename}'
+
 
 custom_objects = retinanet.custom_objects.copy()
 custom_objects.update(keras_resnet.custom_objects)
@@ -54,7 +56,9 @@ def download_imagenet(backbone):
 
 def validate_backbone(backbone):
     if backbone not in allowed_backbones:
-        raise ValueError('Backbone (\'{}\') not in allowed backbones ({}).'.format(backbone, allowed_backbones))
+        raise ValueError(
+            f"Backbone (\'{backbone}\') not in allowed backbones ({allowed_backbones})."
+        )
 
 
 def resnet_retinanet(num_classes, backbone='resnet50', inputs=None, modifier=None, **kwargs):
@@ -76,10 +80,9 @@ def resnet_retinanet(num_classes, backbone='resnet50', inputs=None, modifier=Non
     if modifier:
         resnet = modifier(resnet)
 
-    # create the full model 
-    model = retinanet.retinanet_bbox(inputs=inputs, num_classes=num_classes, backbone=resnet, **kwargs)
-
-    return model
+    return retinanet.retinanet_bbox(
+        inputs=inputs, num_classes=num_classes, backbone=resnet, **kwargs
+    )
 
 
 def resnet50_retinanet(num_classes, inputs=None, **kwargs):

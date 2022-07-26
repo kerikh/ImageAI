@@ -57,11 +57,10 @@ class Anchors(keras.layers.Layer):
         return anchors
 
     def compute_output_shape(self, input_shape):
-        if None not in input_shape[1:]:
-            total = np.prod(input_shape[1:3]) * self.num_anchors
-            return (input_shape[0], total, 4)
-        else:
+        if None in input_shape[1:]:
             return (input_shape[0], None, 4)
+        total = np.prod(input_shape[1:3]) * self.num_anchors
+        return (input_shape[0], total, 4)
 
     def get_config(self):
         config = super(Anchors, self).get_config()
@@ -122,7 +121,7 @@ class NonMaximumSuppression(keras.layers.Layer):
         return keras.backend.expand_dims(detections, axis=0)
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0][0], input_shape[0][1], sum([i[2] for i in input_shape]))
+        return input_shape[0][0], input_shape[0][1], sum(i[2] for i in input_shape)
 
     def get_config(self):
         config = super(NonMaximumSuppression, self).get_config()
@@ -155,12 +154,18 @@ class RegressBoxes(keras.layers.Layer):
         if isinstance(mean, (list, tuple)):
             mean = np.array(mean)
         elif not isinstance(mean, np.ndarray):
-            raise ValueError('Expected mean to be a np.ndarray, list or tuple. Received: {}'.format(type(mean)))
+            raise ValueError(
+                f'Expected mean to be a np.ndarray, list or tuple. Received: {type(mean)}'
+            )
+
 
         if isinstance(std, (list, tuple)):
             std = np.array(std)
         elif not isinstance(std, np.ndarray):
-            raise ValueError('Expected std to be a np.ndarray, list or tuple. Received: {}'.format(type(std)))
+            raise ValueError(
+                f'Expected std to be a np.ndarray, list or tuple. Received: {type(std)}'
+            )
+
 
         self.mean = mean
         self.std  = std

@@ -67,11 +67,14 @@ def default_classification_model(
         outputs = keras.layers.Conv2D(
             filters=classification_feature_size,
             activation='relu',
-            name='pyramid_classification_{}'.format(i),
-            kernel_initializer=keras.initializers.normal(mean=0.0, stddev=0.01, seed=None),
+            name=f'pyramid_classification_{i}',
+            kernel_initializer=keras.initializers.normal(
+                mean=0.0, stddev=0.01, seed=None
+            ),
             bias_initializer='zeros',
-            **options
+            **options,
         )(outputs)
+
 
     outputs = keras.layers.Conv2D(
         filters=num_classes * num_anchors,
@@ -117,9 +120,10 @@ def default_regression_model(num_anchors, pyramid_feature_size=256, regression_f
         outputs = keras.layers.Conv2D(
             filters=regression_feature_size,
             activation='relu',
-            name='pyramid_regression_{}'.format(i),
-            **options
+            name=f'pyramid_regression_{i}',
+            **options,
         )(outputs)
+
 
     outputs = keras.layers.Conv2D(num_anchors * 4, name='pyramid_regression', **options)(outputs)
     outputs = keras.layers.Reshape((-1, 4), name='pyramid_regression_reshape')(outputs)
@@ -260,9 +264,11 @@ def __build_anchors(anchor_parameters, features):
             stride=anchor_parameters.strides[i],
             ratios=anchor_parameters.ratios,
             scales=anchor_parameters.scales,
-            name='anchors_{}'.format(i)
-        )(f) for i, f in enumerate(features)
+            name=f'anchors_{i}',
+        )(f)
+        for i, f in enumerate(features)
     ]
+
 
     return keras.layers.Concatenate(axis=1, name='anchors')(anchors)
 

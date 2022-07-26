@@ -16,4 +16,4 @@ if "KERAS_BACKEND" in os.environ:
 if _BACKEND == "tensorflow":
     from .tensorflow_backend import *
 else:
-    raise ValueError("Unknown backend: " + str(_BACKEND))
+    raise ValueError(f"Unknown backend: {str(_BACKEND)}")

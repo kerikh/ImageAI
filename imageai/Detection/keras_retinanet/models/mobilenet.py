@@ -46,20 +46,18 @@ def download_imagenet(backbone):
     if keras.backend.image_data_format() == 'channels_first':
         raise ValueError('Weights for "channels_last" format '
                          'are not available.')
-    if alpha == 1.0:
-        alpha_text = '1_0'
+    if alpha == 0.50:
+        alpha_text = '5_0'
     elif alpha == 0.75:
         alpha_text = '7_5'
-    elif alpha == 0.50:
-        alpha_text = '5_0'
+    elif alpha == 1.0:
+        alpha_text = '1_0'
     else:
         alpha_text = '2_5'
 
-    model_name = 'mobilenet_{}_{}_tf_no_top.h5'.format(alpha_text, rows)
+    model_name = f'mobilenet_{alpha_text}_{rows}_tf_no_top.h5'
     weights_url = BASE_WEIGHT_PATH + model_name
-    weights_path = get_file(model_name, weights_url, cache_subdir='models')
-
-    return weights_path
+    return get_file(model_name, weights_url, cache_subdir='models')
 
 
 def validate_backbone(backbone):
@@ -71,7 +69,9 @@ def validate_backbone(backbone):
     backbone = backbone.split('_')[0]
 
     if backbone not in allowed_backbones:
-        raise ValueError('Backbone (\'{}\') not in allowed backbones ({}).'.format(backbone, allowed_backbones))
+        raise ValueError(
+            f"Backbone (\'{backbone}\') not in allowed backbones ({allowed_backbones})."
+        )
 
 
 def mobilenet_retinanet(num_classes, backbone='mobilenet224_1.0', inputs=None, modifier=None, **kwargs):
@@ -84,7 +84,11 @@ def mobilenet_retinanet(num_classes, backbone='mobilenet224_1.0', inputs=None, m
     mobilenet = MobileNet(input_tensor=inputs, alpha=alpha, include_top=False, pooling=None, weights=None)
 
     # get last layer from each depthwise convolution blocks 3, 5, 11 and 13
-    outputs = [mobilenet.get_layer(name='conv_pw_{}_relu'.format(i)).output for i in [3, 5, 11, 13]]
+    outputs = [
+        mobilenet.get_layer(name=f'conv_pw_{i}_relu').output
+        for i in [3, 5, 11, 13]
+    ]
+
 
     # create the mobilenet backbone
     mobilenet = keras.models.Model(inputs=inputs, outputs=outputs, name=mobilenet.name)
@@ -93,7 +97,6 @@ def mobilenet_retinanet(num_classes, backbone='mobilenet224_1.0', inputs=None, m
     if modifier:
         mobilenet = modifier(mobilenet)
 
-    # create the full model
-    model = retinanet.retinanet_bbox(inputs=inputs, num_classes=num_classes, backbone=mobilenet, **kwargs)
-
-    return model
+    return retinanet.retinanet_bbox(
+        inputs=inputs, num_classes=num_classes, backbone=mobilenet, **kwargs
+    )
